@@ -1,0 +1,580 @@
+#pragma once
+#include "G_StackEmpty"
+
+class intStack {
+
+	struct Elem {
+		int num;
+		Elem *next;
+		Elem(int n) {
+			num = n;
+			next = nullptr;
+		}
+	};
+
+	Elem *bottom, *top;
+
+public:
+	intStack() {
+		bottom = top = nullptr;
+	}
+
+	~intStack() { delete[] top; top = bottom = nullptr; }
+
+
+	void PUSH(int n) {
+		Elem *p = new Elem(n);
+		if (top == nullptr) {
+			top = bottom = p;
+		}
+		else {
+			p->next = top;
+			top = p;
+		}
+	}
+
+	int POP() {
+		if (top == nullptr) {
+			throw new G_StackEmpty();
+		}
+		else {
+			Elem* e = top;
+			top = top->next;
+			e->next = nullptr;
+			int x = e->num;
+			delete e;
+			return x;
+		}
+	}
+
+	int STACK_EMPTY() {
+		if (top == nullptr) return 1;
+		else return 0;
+	}
+
+
+
+
+};
+
+#pragma once
+
+class G_Tree {};
+
+
+#pragma once
+
+class G_StackEmpty {};
+
+
+
+#pragma once
+class G_Queue {
+
+};
+
+
+
+#pragma once
+#include "Node.h"
+#include "G_StackEmpty.h"
+
+class Stack {
+
+	struct Elem {
+		Node *info;
+		Elem *next;
+
+		Elem(Node* info) {
+			this->info = info;
+			next = nullptr;
+		}
+	};
+
+	Elem *bottom, *top;
+
+	Stack(const Stack&) {}
+	Stack(Stack&&) {}
+
+public:
+
+	Stack() { bottom = top = nullptr; }
+	~Stack() { delete[] top; top = bottom = nullptr; }
+
+
+	void PUSH(Node* node) {
+		Elem *p = new Elem(node);
+		if (top == nullptr) {
+			top = bottom = p;
+		}
+		else {
+			p->next = top;
+			top = p;
+		}
+	}
+
+	Node* POP() {
+		if (top == nullptr) {
+			throw new G_StackEmpty();
+		}
+		else {
+			Elem* e = top;
+			top = top->next;
+			e->next = nullptr;
+			Node* x = e->info;
+			delete e;
+			return x;
+		}
+	}
+
+	int STACK_EMPTY() {
+		if (top == nullptr) return 1;
+		else return 0;
+	}
+
+
+};
+
+
+
+#pragma once
+#include "Node.h"
+#include "G_Queue.h"
+
+class Queue {
+	
+	struct Elem {
+		Node *info;
+		Elem *next;
+
+		Elem(Node* info) {
+			this->info = info;
+			next = nullptr;
+		}
+	};
+
+	Elem *q, *rear;
+
+public:
+	
+	Queue() { q = rear = nullptr; }
+	~Queue() {
+		delete [] q;
+		q = rear = nullptr;
+	}
+
+	void INSERT(Node* node) {
+		Elem *p = new Elem(node);
+		if (rear == nullptr) {
+			q = p;
+		}
+		else {
+			rear->next = p;
+		}
+		rear = p;
+	}
+
+	Node* DELETE() {
+		if (q == nullptr) {
+			throw new G_Queue();
+		}
+		Elem *p = q;
+		Node *x = p->info;
+		q = p->next;
+		if (q == nullptr) { rear = nullptr;}
+		p->next = nullptr;
+		delete p;
+		return x;
+	}
+
+	int QUEUE_EMPTY() {
+		if (q == nullptr) {
+			return 1;
+		}
+		else return 0;
+	}
+
+
+};
+
+
+
+
+#pragma once
+#include <iostream>
+using namespace std;
+
+class Node {
+		
+	int info;
+	Node* root;
+	Node **children;
+
+	Node(){}
+	Node(const Node& n){}
+	Node(Node&& n){}
+	
+public:
+	
+
+	Node(int info, int n, Node* root) {
+		this->info = info;
+		children = new Node*[n];
+		for (int i = 0; i < n; i++) {
+			children[i] = nullptr;
+		}
+		this->root = root;
+	}
+	
+	~Node() { deleteNode(); }			// brise samo taj cvor ,ne i njegovu decu 
+
+	
+	Node** getChildren() { return children; }
+	
+	int getInfo() { return info; }
+	
+	void setRoot(Node* n) {	root = n; }
+
+	void printNode() { cout << info << " "; }
+
+	void deleteNode() {
+		root = nullptr;
+		delete root;
+
+		delete[] children;
+		children = nullptr;
+	}
+};
+
+
+
+#pragma once
+#include "Node.h"
+#include "Stack.h"
+#include "G_Tree.h"
+#include "Queue.h"
+#include "intStack.h"
+
+class Tree {
+
+	int m;
+	Node *root;
+	
+	Tree(const Tree& s) {}
+	Tree(const Tree&& s) {}
+	
+	int treeDepth() {
+		int x = 0;
+		if(root != nullptr) {
+			Node *next = root->getChildren()[0];
+			while (next) {
+				x++;
+				next = next->getChildren()[0];
+			}
+		}
+		return x;
+	}
+
+	
+public:
+	
+	Tree(int m) {
+		if (m >= 2) {
+			this->m = m;
+			root = nullptr;
+		}
+		else { 
+			throw new G_Tree();
+		}
+	}
+
+	
+	~Tree() { deleteTree(); }
+
+	void preorder( void (*P)());
+	void putNode(int);
+	void deleteTree();
+	void printTree();
+	int treeWidth();
+
+
+};
+
+void Tree::preorder(void(*P)()) {
+	Stack *s = new Stack();
+	s->PUSH(root);
+	while (!s->STACK_EMPTY()) {
+		Node* next = s->POP();
+		while (next != nullptr) {
+			P();
+			for (int i = m - 1; i > 0; i--) {
+				if (next->getChildren()[i] != nullptr) {
+					s->PUSH(next->getChildren()[i]);
+				}
+			}
+			next = next->getChildren()[0];
+		}
+	}
+}
+
+void Tree::deleteTree() {
+	Stack *s = new Stack();
+	s->PUSH(root);
+	while (!s->STACK_EMPTY()) {
+		Node* next = s->POP();
+		while (next != nullptr) {
+			for (int i = m - 1; i > 0; i--) {
+				if (next->getChildren()[i] != nullptr) {
+					s->PUSH(next->getChildren()[i]);
+				}
+			}
+			if (next->getChildren()[0] == nullptr) {
+				next->deleteNode();
+				next = nullptr;
+			}
+			else {
+				next = next->getChildren()[0];
+			}
+		}
+	}
+}
+
+void Tree::putNode(int info) {	
+	
+	Node newNode(info, m, root);
+	if(root == nullptr) {
+		root = &newNode;
+		return;
+	}
+	int depth = treeDepth();
+	intStack s1();
+	Stack *s = new Stack();
+	int curr_level = 0;
+
+	s->PUSH(root);
+	s1.PUSH(0);
+	while (!s->STACK_EMPTY()) {
+		Node* next = s->POP();
+		curr_level = s1.POP();
+
+		while (next != nullptr) {
+			if (next == root) {
+				for (int i = 0; i < m; i++) {
+					if (next->getChildren()[i] == nullptr) {
+						next->getChildren()[i] = &newNode;
+						return;
+					}
+				}			
+			}
+
+			if (curr_level == depth - 1) {
+				for (int i = 0; i < m; i++) {
+					if (next->getChildren()[i] == nullptr) {
+						next->getChildren()[i] = &newNode;
+						return;
+					}
+				}
+				break;
+			}
+			else{
+				for (int i = m - 1; i > 0; i--) {
+					if (next->getChildren()[i] != nullptr) {
+						s->PUSH(next->getChildren()[i]);
+						s1.PUSH(curr_level+1);
+					}
+				}
+				next = next->getChildren()[0];
+				current_level++;
+			}
+		}
+	}
+	next=root;
+	while(next->getChildren()[i] != nullptr) next = next->getChildren()[0];
+	next->getChildren()[0] = newNode;
+}
+	
+
+						
+/*Uradjeno preko level-ordera: */
+	/*Node *p = new Node(info, m, this->root);
+	if (root == nullptr) {
+		root = p;
+		root->setRoot(root);
+	}
+	else {
+		Queue q = Queue();
+		Node* next = root;
+		q.INSERT(next);
+		while (!q.QUEUE_EMPTY()) {
+			next = q.DELETE();
+			for (int i = 0; i < m; i++) {
+				if (next->getChildren()[i] == nullptr) {
+					next->getChildren()[i] = p;
+					return;
+				}
+				else {
+					q.INSERT(next->getChildren()[i]);
+				}
+			}
+		}
+
+	}
+	*/
+
+}
+
+void Tree::printTree() {
+	cout << endl << "Ispis stabla po preorder poretku: " << endl;
+	Stack *s = new Stack();
+	s->PUSH(root);
+	while (!s->STACK_EMPTY()) {
+		Node* next = s->POP();
+		while (next != nullptr) {
+			next->printNode();
+			for (int i = m - 1; i > 0; i--) {
+				if (next->getChildren()[i] != nullptr) {
+					s->PUSH(next->getChildren()[i]);
+				}
+			}
+			next = next->getChildren()[0];
+		}
+	}
+}
+
+int Tree::treeWidth() {
+	int width = 0;
+	if(root == nullptr) {
+		cout<< endl << "***Stablo ne postoji***" <<endl;
+		return 0;
+	else{
+		int depth = treeDepth();
+		int curr_level = 0;
+		intStack s1();
+		Stack *s = new Stack();
+		s->PUSH(root);
+		s1.PUSH(0);
+		int cnt = 0;
+		
+		width = m^(depth - 1); //ovo mozda ne radi
+		
+		while (!s->STACK_EMPTY()) {
+			Node* next = s->POP();
+			curr_level = s1.POP();
+			
+			while (next != nullptr) {
+				if (next == root) {
+					for (int i = 0; i < m; i++) {
+						if (next->getChildren()[i] == nullptr) break;
+						cnt++;
+					}	
+					if(cnt != m) return cnt;
+					cnt = 0;			
+				}
+
+				if (curr_level == depth - 1) {
+					for (int i = 0; i < m; i++) {
+						if (next->getChildren()[i] != nullptr) {
+							cnt++;
+						}else{
+							return cnt > width ? cnt : width;
+						}
+					}
+					break;
+				}
+				else{
+					for (int i = m - 1; i > 0; i--) {
+						if (next->getChildren()[i] != nullptr) {
+							s->PUSH(next->getChildren()[i]);
+							s1.PUSH(curr_level+1);
+						}
+					}
+					next = next->getChildren()[0];
+					current_level++;
+				}
+			}
+		}
+		return cnt;
+	}
+	
+}
+
+
+
+#include "Tree.h"
+
+int main() {
+	int uslov = 1;
+	while (uslov) {
+		cout << endl << "0.Kraj programa" << endl << "1.Kreiraj stablo" << endl << "2.Ubaci cvor" << endl << "3.Ispisi stablo" << endl << "4.Obrisi stablo" << endl;
+		int k;
+		cin >> k;
+		if (k < 0 || k>4) {
+			cout << endl << "***Pogresan izbor***" << endl;
+			continue;
+		}
+		switch(k) {
+		case 0: 
+			uslov = 0;
+			break;
+
+		case 1: 
+			cout << "Red stabla? ";
+			int m;
+			cin >> m;
+			Tree stablo(m);
+			break;
+		case 2: {
+			cout << "Vrednost novog cvora? ";
+			int n;
+			cin >> n;
+			stablo.putNode(n);
+			break;
+		}
+		case 3: {
+			stablo.printTree();
+			break;
+		}
+		case 4:{
+			stablo.deleteTree();
+		}
+		default:
+			cout << endl << "***Pogresan izbor***" << endl;
+			break;
+		}
+		/*Tree stablo(3);
+		stablo.putNode(1);
+		stablo.putNode(2);
+		stablo.putNode(3);
+		stablo.putNode(4);
+		stablo.putNode(5);
+		stablo.putNode(6);
+		stablo.putNode(7);
+		stablo.putNode(8);
+		stablo.putNode(9);
+		stablo.putNode(10);
+		stablo.printTree();
+		*/
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
