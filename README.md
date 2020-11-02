@@ -1,2 +1,2 @@
-# ASP-Projekat
+# Algorithms and data structures
 University project
